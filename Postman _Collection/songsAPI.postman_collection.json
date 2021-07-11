@@ -1,0 +1,150 @@
+{
+	"info": {
+		"_postman_id": "5a59fa56-b31e-47c8-899b-e5233b7e2150",
+		"name": "songsAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "RegisterUser",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"subhadeep1234\",\r\n    \"email\": \"subhadeep762@gmail.com\",\r\n    \"password\": \"123456789\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/v1.0/register",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1.0",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login - GetToken",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "subhadeep762@gmail.com",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "iammatrix",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/v1.0/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1.0",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Enter Data",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-access-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwdWJsaWNfaWQiOiI5MDA0YWFkNy1jMDdjLTQwZjctOTE4MS1jYjMxZjYwMjM1MjUiLCJleHAiOjE2MjYwMDgwMzZ9.8Btrc-STBlWSqX3g1Z95g82tQFZfmNTKK-hsNhcmCtE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"song_name\": \"It's ypu\",\r\n    \"singer\": \"Ali gate\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/v1.0/songs",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1.0",
+						"songs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetSongs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-access-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwdWJsaWNfaWQiOiIwZjYxODM2OS0zMWI1LTQxNTctYTE1ZC00OWUwZDI4ODBiMjciLCJleHAiOjE2MjQzOTg1MjB9.zZGKNHwh1pQfE6rUhek91b1se2f1O1wCgNIurwMupF4",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/v1.0/songs",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1.0",
+						"songs"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
