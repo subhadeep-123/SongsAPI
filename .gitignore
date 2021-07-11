@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+src/config/cofig.ini
+src/api_data.db

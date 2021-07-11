@@ -1,0 +1,7 @@
+flask
+pyjwt
+Flask-SQLAlchemy
+flask-restful
+gunicorn
+lyricsgenius
+configparser

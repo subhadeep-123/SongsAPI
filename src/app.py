@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # Local Import
 import config
+import lyrics
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///api_data.db'
@@ -21,6 +22,8 @@ api = Api(app)
 app.logger.setLevel(10)
 
 # TODO - Add Docstring
+
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(60))
@@ -31,7 +34,7 @@ class Users(db.Model):
     def __repr__(self) -> str:
         return f'User - {self.name}'
 
-# TODO - Add spotify API Feature
+
 class Songs(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -39,6 +42,7 @@ class Songs(db.Model):
     singer = db.Column(db.String(50), nullable=False)
     album = db.Column(db.String(50), nullable=False)
     release_Date = db.Column(db.String(50), nullable=False)
+    song_lyrics = db.Column(db.String(5000), nullable=False)
 
 
 if not os.path.isfile('api_data.db'):
@@ -61,7 +65,8 @@ def token_required(func):
                 }
             )
         try:
-            data = jwt.decode(token,app.config['SECRET_KEY'],algorithms=['HS256'])
+            data = jwt.decode(
+                token, app.config['SECRET_KEY'], algorithms=['HS256'])
             app.logger.debug(f'Decoded Token - {data}')
             current_user = Users.query.filter_by(
                 public_id=data['public_id']).first()
@@ -74,7 +79,7 @@ def token_required(func):
         return func(current_user, *args, **kwargs)
     return decorator
 
-# TODO - Add Admin Feature
+
 class ShowUsers(Resource):
     def get(self):
         """Shows all registerd users from the database"""
@@ -99,7 +104,6 @@ class ShowUsers(Resource):
             )
 
 
-# TODO - Check if data exists, if yes don't let the register agian
 class Register(Resource):
 
     def post(self):
@@ -127,25 +131,32 @@ class Register(Resource):
                 {"error message": "username and password cannot be same"}
             )
 
-        app.logger.debug(f"User Data - {data}")
-        hashed_password = generate_password_hash(
-            data['password'], method='sha256'
-        )
-        app.logger.info(f"Hashed Password - {hashed_password}")
-        new_user = Users(
-            public_id=str(uuid.uuid4()),
-            name=username,
-            email=email,
-            password=hashed_password,
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        app.logger.debug('User Registration Complete.')
-        return jsonify(
-            {
-                "message": "User Registration Complete."
-            }
-        )
+        if not Users.query.filter_by(email=email).first():
+            app.logger.debug(f"User Data - {data}")
+            hashed_password = generate_password_hash(
+                data['password'], method='sha256'
+            )
+            app.logger.info(f"Hashed Password - {hashed_password}")
+            new_user = Users(
+                public_id=str(uuid.uuid4()),
+                name=username,
+                email=email,
+                password=hashed_password,
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            app.logger.debug('User Registration Complete.')
+            return jsonify(
+                {
+                    "message": "User Registration Complete."
+                }
+            )
+        else:
+            return jsonify(
+                {
+                    "message": "Users email id already exists, try loging in."
+                }
+            )
 
 
 class Login(Resource):
@@ -177,7 +188,7 @@ class Login(Resource):
                 f'Token Generated for - {auth.username}, {auth.password} -> {token}')
             return jsonify(
                 {
-                    'token': token.decode("utf-8")
+                    'token': token
                 }
             )
         return make_response(
@@ -191,7 +202,6 @@ class Login(Resource):
 class SongsList(Resource):
     method_decorators = [token_required]
 
-    # @token_required
     def get(self, current_user):
         songs = Songs.query.filter_by(user_id=current_user.id).all()
         result = list()
@@ -200,7 +210,8 @@ class SongsList(Resource):
             data['song_name'] = song.song_name,
             data['singer'] = song.singer
             data['album'] = song.album,
-            data['release_Date'] = song.release_Date
+            data['release_Date'] = song.release_Date,
+            data['lyrics'] = str(song.song_lyrics)
             result.append(data)
         return jsonify(
             {
@@ -208,23 +219,43 @@ class SongsList(Resource):
             }
         )
 
-    # @token_required
     def post(self, current_user):
         data = request.get_json()
         app.logger.debug(f'Data Recieved - {data}')
-        new_song_record = Songs(
-            user_id=current_user.id,
-            song_name=data['song_name'],
-            singer=data['singer'],
-            album=data['album'],
-            release_Date=data['release_Date']
-        )
+
+        # Getting the lyrics
+        try:
+            getLyrics = lyrics.GetLyrics()
+            lyrics_of_the_song = getLyrics.fetch(
+                data.get('singer', None),
+                data.get('song_name', None),
+            )
+            if not lyrics_of_the_song:
+                lyrics_of_the_song = 'Could Not Find at the Moment'
+        except Exception as err:
+            return jsonify(
+                {
+                    "message": f"Error Occured - {err}"
+                }
+            )
+        else:
+            new_song_record = Songs(
+                user_id=current_user.id,
+                song_name=data.get('song_name', None),
+                singer=data.get('singer', None),
+                album=data.get('album', None),
+                release_Date=data.get('release_Date', None),
+                song_lyrics=lyrics_of_the_song
+            )
         db.session.add(new_song_record)
         db.session.commit()
         app.logger.debug('Song Data Registered')
         return jsonify(
             {
-                'message': 'New Song Entry Created'
+                'status': 200,
+                "message": "Record added to the database",
+                "commit_id": str(uuid.uuid4()),
+                "Fetchd Lyrics": lyrics_of_the_song
             }
         )
 
